@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
-import { Filter, RefreshCw, CheckSquare, Square, Calendar, Loader2 } from 'lucide-react';
+import { Filter, RefreshCw, CheckSquare, Square, Calendar, Loader2, Trash2, Download } from 'lucide-react';
 
 export default function History() {
   const [detections, setDetections] = useState([]);
@@ -16,8 +16,9 @@ export default function History() {
   // Selection
   const [selectedIds, setSelectedIds] = useState([]);
   
-  // Re-evaluation
+  // Re-evaluation & Loading states
   const [isReevaluating, setIsReevaluating] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
   const hfUrl = localStorage.getItem('hf_api_url') || 'https://YOUR-HF-SPACE.hf.space';
@@ -102,7 +103,6 @@ export default function History() {
         const aiData = typeof result.data[0] === 'string' ? JSON.parse(result.data[0]) : result.data[0];
         
         if (aiData && aiData.count > 0) {
-          // Lấy lỗi nghiêm trọng nhất hoặc tự tin nhất
           const bestDet = aiData.detections.reduce((prev, current) => 
             (prev.confidence > current.confidence) ? prev : current
           );
@@ -126,27 +126,96 @@ export default function History() {
     fetchDetections();
   };
 
+  const handleDelete = async () => {
+    if (selectedIds.length === 0) return alert("Vui lòng chọn ít nhất 1 đối tượng để xóa!");
+    if (!window.confirm(`CẢNH BÁO: Bạn chuẩn bị xóa vĩnh viễn ${selectedIds.length} đối tượng. Bạn có chắc chắn?`)) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase.from('detections').delete().in('id', selectedIds);
+      if (error) throw error;
+      alert(`Đã xóa thành công ${selectedIds.length} đối tượng!`);
+      setSelectedIds([]);
+      fetchDetections();
+    } catch (err) {
+      alert("Lỗi khi xóa: " + err.message);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const handleExportCSV = () => {
+    if (filteredData.length === 0) return alert("Không có dữ liệu để xuất!");
+    
+    const headers = ['ID', 'Người báo cáo', 'Loại lỗi', 'Độ tin cậy (%)', 'Mức độ', 'Vĩ độ', 'Kinh độ', 'Thời gian tạo', 'Link ảnh'];
+    
+    const csvRows = [headers.join(',')];
+    
+    filteredData.forEach(row => {
+      const values = [
+        row.id,
+        row.custom_users?.username || 'Unknown',
+        row.class_name,
+        Math.round(row.confidence * 100),
+        row.severity,
+        row.latitude,
+        row.longitude,
+        new Date(row.created_at).toLocaleString('vi-VN').replace(',', ''),
+        row.image_url || 'N/A'
+      ];
+      // Bọc giá trị bằng dấu nháy kép để tránh lỗi dấu phẩy trong nội dung
+      csvRows.push(values.map(v => `"${v}"`).join(','));
+    });
+    
+    const blob = new Blob(['\uFEFF' + csvRows.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `bao_cao_o_ga_${new Date().getTime()}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto' }}>
+    <div style={{ padding: '20px', maxWidth: '1000px', margin: '0 auto', paddingBottom: '100px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
         <h1 style={{ fontSize: '24px', fontWeight: '700' }}>
-          Lịch sử phát hiện {profile?.role === 'admin' ? '(Toàn hệ thống)' : ''}
+          Quản lý đối tượng {profile?.role === 'admin' ? '(Admin)' : ''}
         </h1>
         
         {profile?.role === 'admin' && (
-          <button 
-            onClick={handleReevaluate}
-            disabled={isReevaluating || selectedIds.length === 0}
-            className="btn btn-primary"
-            style={{ background: isReevaluating ? 'var(--bg-secondary)' : 'var(--accent-gradient)' }}
-          >
-            {isReevaluating ? <Loader2 className="spin" size={20} /> : <RefreshCw size={20} />}
-            {isReevaluating ? `Đang xử lý ${progress.current}/${progress.total}...` : `Nhận diện lại (${selectedIds.length})`}
-          </button>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            <button 
+              onClick={handleExportCSV}
+              className="btn btn-secondary"
+              style={{ background: 'var(--bg-card)', color: 'var(--text-primary)', border: '1px solid var(--border-color)' }}
+            >
+              <Download size={20} /> Xuất CSV
+            </button>
+            <button 
+              onClick={handleDelete}
+              disabled={isDeleting || selectedIds.length === 0}
+              className="btn"
+              style={{ background: selectedIds.length > 0 ? 'var(--danger)' : 'var(--bg-secondary)', color: '#fff', opacity: selectedIds.length > 0 ? 1 : 0.5 }}
+            >
+              {isDeleting ? <Loader2 className="spin" size={20} /> : <Trash2 size={20} />}
+              Xóa ({selectedIds.length})
+            </button>
+            <button 
+              onClick={handleReevaluate}
+              disabled={isReevaluating || selectedIds.length === 0}
+              className="btn btn-primary"
+              style={{ background: isReevaluating ? 'var(--bg-secondary)' : 'var(--accent-gradient)' }}
+            >
+              {isReevaluating ? <Loader2 className="spin" size={20} /> : <RefreshCw size={20} />}
+              {isReevaluating ? `Đang xử lý ${progress.current}/${progress.total}...` : `Nhận diện lại (${selectedIds.length})`}
+            </button>
+          </div>
         )}
       </div>
       
-      {/* Filters (Only for Admin to keep member view simple, or both) */}
+      {/* Filters */}
       <div className="glass-card" style={{ padding: '16px', marginBottom: '24px', display: 'flex', gap: '16px', flexWrap: 'wrap', alignItems: 'flex-end' }}>
         <div>
           <label style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Loại hư hỏng</label>
@@ -166,6 +235,7 @@ export default function History() {
             <option value="high">Nghiêm trọng (High)</option>
             <option value="medium">Trung bình (Medium)</option>
             <option value="low">Nhẹ (Low)</option>
+            <option value="unknown">Chưa rõ</option>
           </select>
         </div>
         <div>
@@ -185,9 +255,9 @@ export default function History() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         {profile?.role === 'admin' && filteredData.length > 0 && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '0 8px' }}>
-            <button onClick={toggleSelectAll} style={{ color: 'var(--accent-light)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <button onClick={toggleSelectAll} style={{ color: 'var(--accent-light)', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: 'none', border: 'none', padding: 0 }}>
               {selectedIds.length === filteredData.length && filteredData.length > 0 ? <CheckSquare size={20} /> : <Square size={20} />}
-              <span>Chọn tất cả</span>
+              <span style={{ fontSize: '14px', fontWeight: '500' }}>Chọn tất cả đang hiển thị ({filteredData.length})</span>
             </button>
           </div>
         )}
@@ -196,10 +266,10 @@ export default function History() {
           <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-secondary)' }}>Không có dữ liệu phù hợp</div>
         ) : (
           filteredData.map(det => (
-            <div key={det.id} className="glass-card" style={{ display: 'flex', gap: '16px', padding: '16px', alignItems: 'center', border: selectedIds.includes(det.id) ? '1px solid var(--accent-primary)' : '' }}>
+            <div key={det.id} className="glass-card" style={{ display: 'flex', gap: '16px', padding: '16px', alignItems: 'center', border: selectedIds.includes(det.id) ? '1px solid var(--accent-primary)' : '1px solid transparent', transition: 'all 0.2s' }}>
               
               {profile?.role === 'admin' && (
-                <button onClick={() => toggleSelect(det.id)} style={{ color: selectedIds.includes(det.id) ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
+                <button onClick={() => toggleSelect(det.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: selectedIds.includes(det.id) ? 'var(--accent-primary)' : 'var(--text-secondary)' }}>
                   {selectedIds.includes(det.id) ? <CheckSquare size={24} /> : <Square size={24} />}
                 </button>
               )}
@@ -215,10 +285,10 @@ export default function History() {
               <div style={{ flex: 1 }}>
                 <h4 style={{ margin: 0, fontSize: '18px', color: 'var(--text-primary)' }}>{det.class_name}</h4>
                 <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <span>Tin cậy: {Math.round(det.confidence * 100)}% | Mức độ: <span style={{ color: det.severity === 'high' ? 'var(--danger)' : det.severity === 'medium' ? 'var(--warning)' : 'var(--success)'}}>{det.severity}</span></span>
+                  <span>Tin cậy: {Math.round(det.confidence * 100)}% | Mức độ: <span style={{ color: det.severity === 'high' ? 'var(--danger)' : det.severity === 'medium' ? 'var(--warning)' : 'var(--success)', fontWeight: 'bold'}}>{det.severity}</span></span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><Calendar size={12} /> {new Date(det.created_at).toLocaleString('vi-VN')}</span>
                   {profile?.role === 'admin' && (
-                    <span style={{ color: 'var(--accent-light)' }}>Bởi: {det.custom_users?.username || 'Unknown'}</span>
+                    <span style={{ color: 'var(--accent-light)' }}>Báo cáo bởi: <b>{det.custom_users?.username || 'Unknown'}</b></span>
                   )}
                 </div>
               </div>
