@@ -29,17 +29,14 @@ export default function Layout() {
           <span>Tổng quan</span>
         </NavLink>
         
-        {/* Only members can see scan button */}
-        {(profile?.role === 'member' || !user) && (
-          <NavLink to={user ? "/scan" : "/auth"} style={({isActive}) => ({
-            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-            color: isActive ? 'var(--accent-light)' : 'var(--text-muted)',
-            fontSize: '12px'
-          })}>
-            <Scan size={20} />
-            <span>Quét đường</span>
-          </NavLink>
-        )}
+        <NavLink to={user ? "/scan" : "/auth"} style={({isActive}) => ({
+          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+          color: isActive ? 'var(--accent-light)' : 'var(--text-muted)',
+          fontSize: '12px'
+        })}>
+          <Scan size={20} />
+          <span>Quét đường</span>
+        </NavLink>
 
         <NavLink to="/map" style={({isActive}) => ({
           display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',

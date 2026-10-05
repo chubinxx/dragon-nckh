@@ -30,15 +30,20 @@ ALTER TABLE detections ENABLE ROW LEVEL SECURITY;
 
 -- Xóa policy cũ nếu có để tránh lỗi trùng lặp khi chạy lại
 DROP POLICY IF EXISTS "Users can view own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can insert own profile" ON profiles;
+DROP POLICY IF EXISTS "Users can update own profile" ON profiles;
 DROP POLICY IF EXISTS "Admins can view all profiles" ON profiles;
 DROP POLICY IF EXISTS "Members can view own detections" ON detections;
 DROP POLICY IF EXISTS "Members can insert own detections" ON detections;
 DROP POLICY IF EXISTS "Admins can view all detections" ON detections;
+DROP POLICY IF EXISTS "Public can view all detections" ON detections;
 DROP POLICY IF EXISTS "Allow public read" ON storage.objects;
 DROP POLICY IF EXISTS "Allow authenticated uploads" ON storage.objects;
 
 -- 5. Tạo Policies mới cho Profiles
 CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can insert own profile" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Admins can view all profiles" ON profiles FOR SELECT USING (
   EXISTS (SELECT 1 FROM profiles WHERE id = auth.uid() AND role = 'admin')
 );
@@ -56,5 +61,4 @@ CREATE POLICY "Public can view all detections" ON detections FOR SELECT USING (t
 CREATE POLICY "Allow public read" ON storage.objects FOR SELECT USING (bucket_id = 'pothole-images');
 CREATE POLICY "Allow authenticated uploads" ON storage.objects FOR INSERT TO authenticated WITH CHECK (bucket_id = 'pothole-images');
 
--- LƯU Ý: Trả về thành công
 SELECT 'Setup complete' as status;
