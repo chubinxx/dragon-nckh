@@ -10,7 +10,7 @@ export default function History() {
     if (!profile) return;
     const fetchDetections = async () => {
       let query = supabase.from('detections')
-        .select('*, profiles(email)')
+        .select('*, custom_users(username)')
         .order('created_at', { ascending: false })
         .limit(50);
         
@@ -48,7 +48,7 @@ export default function History() {
                   <span>Tin cậy: {Math.round(det.confidence * 100)}%</span>
                   <span>{new Date(det.created_at).toLocaleDateString('vi-VN')}</span>
                   {profile?.role === 'admin' && (
-                    <span style={{ color: 'var(--accent-light)' }}>Bởi: {det.profiles?.email?.split('@roadguard')[0]}</span>
+                    <span style={{ color: 'var(--accent-light)' }}>Bởi: {det.custom_users?.username}</span>
                   )}
                 </div>
               </div>

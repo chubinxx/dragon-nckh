@@ -11,7 +11,7 @@ export default function MapPage() {
   useEffect(() => {
     if (!profile) return;
     const fetchDetections = async () => {
-      let query = supabase.from('detections').select('*, profiles(email)');
+      let query = supabase.from('detections').select('*, custom_users(username)');
       
       // If member, only show their own detections
       if (profile.role === 'member') {
@@ -59,7 +59,7 @@ export default function MapPage() {
                   <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>Độ tin cậy: {Math.round(det.confidence * 100)}%</p>
                   <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>Mức độ: {det.severity}</p>
                   {profile.role === 'admin' && (
-                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--accent-light)' }}>Người phát hiện: {det.profiles?.email?.split('@roadguard')[0]}</p>
+                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--accent-light)' }}>Người phát hiện: {det.custom_users?.username}</p>
                   )}
                 </div>
               </Popup>

@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Mail, Lock, Loader2 } from 'lucide-react';
+import { Shield, User, Lock, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('member'); // Default for signup
   const [error, setError] = useState('');
@@ -18,29 +18,16 @@ export default function Auth() {
     setError('');
     setLoading(true);
 
-    // Format username to email under the hood for Supabase Auth
-    const formattedUsername = email.includes('@') ? email : `${email.replace(/\s+/g, '')}@roadguard.com`;
-    // Pad password to bypass Supabase's strict 6-char minimum requirement
-    const paddedPassword = password + '_Nckh2024!';
-
     try {
       if (isLogin) {
-        await signIn(formattedUsername, paddedPassword);
+        await signIn(username, password);
         navigate('/');
       } else {
-        await signUp(formattedUsername, paddedPassword, role);
+        await signUp(username, password, role);
         navigate('/');
       }
     } catch (err) {
-      if (err.message.includes('Email signups are disabled')) {
-        setError('Lỗi: Bạn lỡ tắt nhầm "Enable Email provider" rồi! Hãy vào Supabase bật lại "Enable Email provider", chỉ tắt "Confirm email" thôi nhé.');
-      } else if (err.message.includes('Email not confirmed')) {
-        setError('Lỗi: Bạn cần tắt tính năng "Confirm email" trong cài đặt Supabase (Authentication > Providers > Email).');
-      } else if (err.message.includes('Invalid login credentials')) {
-        setError('Sai tên đăng nhập hoặc mật khẩu.');
-      } else {
-        setError(err.message || 'Đã có lỗi xảy ra');
-      }
+      setError(err.message || 'Đã có lỗi xảy ra');
     } finally {
       setLoading(false);
     }
@@ -65,14 +52,14 @@ export default function Auth() {
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div style={{ position: 'relative' }}>
-            <Mail size={20} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-secondary)' }} />
+            <User size={20} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-secondary)' }} />
             <input 
               type="text" 
               className="input-field" 
-              placeholder="Tên đăng nhập (Ví dụ: admin)" 
+              placeholder="Tên đăng nhập (Tùy ý)" 
               style={{ paddingLeft: '40px' }}
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
               required
             />
           </div>
@@ -82,7 +69,7 @@ export default function Auth() {
             <input 
               type="password" 
               className="input-field" 
-              placeholder="Mật khẩu" 
+              placeholder="Mật khẩu (Độ dài tùy ý)" 
               style={{ paddingLeft: '40px' }}
               value={password}
               onChange={(e) => setPassword(e.target.value)}

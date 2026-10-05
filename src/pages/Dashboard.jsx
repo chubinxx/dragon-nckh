@@ -1,18 +1,16 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Activity, AlertTriangle, CheckCircle, ShieldAlert } from 'lucide-react';
 
 export default function Dashboard() {
   const { user, profile } = useAuth();
   const [stats, setStats] = useState({ total: 0, today: 0, high_severity: 0 });
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchStats = async () => {
-      // If user is member, show their own stats, otherwise (admin or public) show total stats
       let query = supabase.from('detections').select('id, severity, created_at', { count: 'exact' });
       
       if (profile?.role === 'member') {
@@ -42,7 +40,7 @@ export default function Dashboard() {
         </h1>
         <p style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
           {user 
-            ? `Xin chào, ${(profile?.email || user.email).split('@roadguard')[0]} (${profile?.role === 'admin' ? 'Quản trị viên' : 'Thành viên'})` 
+            ? `Xin chào, ${profile?.username} (${profile?.role === 'admin' ? 'Quản trị viên' : 'Thành viên'})` 
             : 'Hệ thống nhận diện và báo cáo hư hỏng mặt đường thông minh.'}
         </p>
       </header>
