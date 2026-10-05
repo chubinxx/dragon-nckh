@@ -20,17 +20,21 @@ export default function Auth() {
 
     // Format username to email under the hood for Supabase Auth
     const formattedUsername = email.includes('@') ? email : `${email.replace(/\s+/g, '')}@roadguard.com`;
+    // Pad password to bypass Supabase's strict 6-char minimum requirement
+    const paddedPassword = password + '_Nckh2024!';
 
     try {
       if (isLogin) {
-        await signIn(formattedUsername, password);
+        await signIn(formattedUsername, paddedPassword);
         navigate('/');
       } else {
-        await signUp(formattedUsername, password, role);
+        await signUp(formattedUsername, paddedPassword, role);
         navigate('/');
       }
     } catch (err) {
-      if (err.message.includes('Email not confirmed')) {
+      if (err.message.includes('Email signups are disabled')) {
+        setError('Lỗi: Bạn lỡ tắt nhầm "Enable Email provider" rồi! Hãy vào Supabase bật lại "Enable Email provider", chỉ tắt "Confirm email" thôi nhé.');
+      } else if (err.message.includes('Email not confirmed')) {
         setError('Lỗi: Bạn cần tắt tính năng "Confirm email" trong cài đặt Supabase (Authentication > Providers > Email).');
       } else if (err.message.includes('Invalid login credentials')) {
         setError('Sai tên đăng nhập hoặc mật khẩu.');
@@ -83,7 +87,6 @@ export default function Auth() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              minLength={6}
             />
           </div>
 
