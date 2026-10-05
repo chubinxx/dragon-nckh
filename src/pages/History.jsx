@@ -48,7 +48,7 @@ export default function History() {
                   <span>Tin cậy: {Math.round(det.confidence * 100)}%</span>
                   <span>{new Date(det.created_at).toLocaleDateString('vi-VN')}</span>
                   {profile?.role === 'admin' && (
-                    <span style={{ color: 'var(--accent-light)' }}>Bởi: {det.profiles?.email}</span>
+                    <span style={{ color: 'var(--accent-light)' }}>Bởi: {det.profiles?.email?.split('@roadguard')[0]}</span>
                   )}
                 </div>
               </div>

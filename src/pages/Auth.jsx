@@ -18,16 +18,25 @@ export default function Auth() {
     setError('');
     setLoading(true);
 
+    // Format username to email under the hood for Supabase Auth
+    const formattedUsername = email.includes('@') ? email : `${email.replace(/\s+/g, '')}@roadguard.com`;
+
     try {
       if (isLogin) {
-        await signIn(email, password);
+        await signIn(formattedUsername, password);
         navigate('/');
       } else {
-        await signUp(email, password, role);
+        await signUp(formattedUsername, password, role);
         navigate('/');
       }
     } catch (err) {
-      setError(err.message || 'Đã có lỗi xảy ra');
+      if (err.message.includes('Email not confirmed')) {
+        setError('Lỗi: Bạn cần tắt tính năng "Confirm email" trong cài đặt Supabase (Authentication > Providers > Email).');
+      } else if (err.message.includes('Invalid login credentials')) {
+        setError('Sai tên đăng nhập hoặc mật khẩu.');
+      } else {
+        setError(err.message || 'Đã có lỗi xảy ra');
+      }
     } finally {
       setLoading(false);
     }
@@ -54,9 +63,9 @@ export default function Auth() {
           <div style={{ position: 'relative' }}>
             <Mail size={20} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-secondary)' }} />
             <input 
-              type="email" 
+              type="text" 
               className="input-field" 
-              placeholder="Email của bạn" 
+              placeholder="Tên đăng nhập (Ví dụ: admin)" 
               style={{ paddingLeft: '40px' }}
               value={email}
               onChange={(e) => setEmail(e.target.value)}

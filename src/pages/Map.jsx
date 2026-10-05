@@ -59,7 +59,7 @@ export default function MapPage() {
                   <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>Độ tin cậy: {Math.round(det.confidence * 100)}%</p>
                   <p style={{ margin: 0, fontSize: '12px', color: 'var(--text-secondary)' }}>Mức độ: {det.severity}</p>
                   {profile.role === 'admin' && (
-                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--accent-light)' }}>Người phát hiện: {det.profiles?.email}</p>
+                    <p style={{ margin: 0, fontSize: '12px', color: 'var(--accent-light)' }}>Người phát hiện: {det.profiles?.email?.split('@roadguard')[0]}</p>
                   )}
                 </div>
               </Popup>

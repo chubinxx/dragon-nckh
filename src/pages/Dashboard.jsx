@@ -42,7 +42,7 @@ export default function Dashboard() {
         </h1>
         <p style={{ color: 'var(--text-secondary)', marginTop: '8px' }}>
           {user 
-            ? `Xin chào, ${profile?.email || user.email} (${profile?.role === 'admin' ? 'Quản trị viên' : 'Thành viên'})` 
+            ? `Xin chào, ${(profile?.email || user.email).split('@roadguard')[0]} (${profile?.role === 'admin' ? 'Quản trị viên' : 'Thành viên'})` 
             : 'Hệ thống nhận diện và báo cáo hư hỏng mặt đường thông minh.'}
         </p>
       </header>
