@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Scan, Map as MapIcon, History, LogOut, LogIn, Moon, Sun } from 'lucide-react';
+import { LayoutDashboard, Scan, Map as MapIcon, History, LogOut, LogIn, Moon, Sun, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
@@ -38,6 +38,23 @@ export default function Layout() {
       >
         {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
       </button>
+
+      {/* Profile Button (Top Right) */}
+      {user && (
+        <button 
+          onClick={() => navigate('/profile')}
+          className="glass"
+          style={{
+            position: 'fixed', top: '16px', right: '64px', zIndex: 100,
+            width: '40px', height: '40px', borderRadius: '50%',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: 'var(--accent-light)',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+          }}
+        >
+          <User size={20} />
+        </button>
+      )}
 
       <nav style={{
         position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 100,

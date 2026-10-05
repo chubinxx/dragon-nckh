@@ -7,6 +7,7 @@ import Dashboard from './pages/Dashboard';
 import Scan from './pages/Scan';
 import MapPage from './pages/Map';
 import History from './pages/History';
+import Profile from './pages/Profile';
 import { Loader2 } from 'lucide-react';
 
 const PrivateRoute = ({ children }) => {
@@ -27,6 +28,7 @@ function AppRoutes() {
         
         {/* Protected pages */}
         <Route path="scan" element={<PrivateRoute><Scan /></PrivateRoute>} />
+        <Route path="profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
       </Route>
     </Routes>
   );
