@@ -36,7 +36,7 @@ export default function MapPage() {
   return (
     <div style={{ height: '100vh', width: '100%' }}>
       <MapContainer 
-        center={[10.7769, 106.7009]} 
+        center={[21.0285, 105.8542]} 
         zoom={13} 
         style={{ height: '100%', width: '100%', zIndex: 0 }}
         zoomControl={false}
