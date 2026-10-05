@@ -19,11 +19,14 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
-      <Route path="/" element={<PrivateRoute><Layout /></PrivateRoute>}>
+      <Route path="/" element={<Layout />}>
+        {/* Public pages */}
         <Route index element={<Dashboard />} />
-        <Route path="scan" element={<Scan />} />
         <Route path="map" element={<MapPage />} />
         <Route path="history" element={<History />} />
+        
+        {/* Protected pages */}
+        <Route path="scan" element={<PrivateRoute><Scan /></PrivateRoute>} />
       </Route>
     </Routes>
   );

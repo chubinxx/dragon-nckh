@@ -1,15 +1,15 @@
 import React from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Scan, Map as MapIcon, History, LogOut } from 'lucide-react';
+import { LayoutDashboard, Scan, Map as MapIcon, History, LogOut, LogIn } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export default function Layout() {
-  const { profile, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
 
   const handleLogout = async () => {
     await signOut();
-    navigate('/auth');
+    navigate('/');
   };
 
   return (
@@ -29,8 +29,9 @@ export default function Layout() {
           <span>Tổng quan</span>
         </NavLink>
         
-        {profile?.role === 'member' && (
-          <NavLink to="/scan" style={({isActive}) => ({
+        {/* Only members can see scan button */}
+        {(profile?.role === 'member' || !user) && (
+          <NavLink to={user ? "/scan" : "/auth"} style={({isActive}) => ({
             display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
             color: isActive ? 'var(--accent-light)' : 'var(--text-muted)',
             fontSize: '12px'
@@ -58,13 +59,23 @@ export default function Layout() {
           <span>Lịch sử</span>
         </NavLink>
 
-        <button onClick={handleLogout} style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
-          color: 'var(--danger)', fontSize: '12px'
-        }}>
-          <LogOut size={20} />
-          <span>Thoát</span>
-        </button>
+        {user ? (
+          <button onClick={handleLogout} style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+            color: 'var(--danger)', fontSize: '12px'
+          }}>
+            <LogOut size={20} />
+            <span>Thoát</span>
+          </button>
+        ) : (
+          <NavLink to="/auth" style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
+            color: 'var(--success)', fontSize: '12px'
+          }}>
+            <LogIn size={20} />
+            <span>Đăng nhập</span>
+          </NavLink>
+        )}
       </nav>
       
       <main className="page-container">
